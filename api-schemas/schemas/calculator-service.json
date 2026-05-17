@@ -1,0 +1,152 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Exchange API",
+    "version": "1.0"
+  },
+  "paths": {
+    "/api/v1/rates": {
+      "get": {
+        "summary": "Получить курсы валют ЦБ на сегодня",
+        "operationId": "getCurrencyRates",
+        "responses": {
+          "200": {
+            "description": "Список курсов валют",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCurrencyRatesResponseV1"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Ошибка CBR"
+          }
+        }
+      }
+    },
+    "/api/v1/exchange": {
+      "post": {
+        "summary": "Конвертация валюты по цепочке",
+        "operationId": "exchangeCurrency",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExchangeRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Результат конвертации",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExchangeResponseV1"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации"
+          },
+          "502": {
+            "description": "Ошибка CBR"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ExchangeRequestV1": {
+        "required": ["amount", "steps"],
+        "properties": {
+          "amount": {
+            "type": "string",
+            "example": "10"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["USD", "KGS"]
+          }
+        },
+        "type": "object"
+      },
+      "ExchangeResponseV1StepsItem": {
+        "properties": {
+          "from": {
+            "type": "string",
+            "example": "USD"
+          },
+          "to": {
+            "type": "string",
+            "example": "KGS"
+          },
+          "amountFrom": {
+            "type": "number",
+            "example": 10
+          },
+          "amountTo": {
+            "type": "number",
+            "example": 874.5
+          },
+          "rateFromTo": {
+            "type": "number",
+            "example": 87.45
+          }
+        },
+        "type": "object"
+      },
+      "ExchangeResponseV1": {
+        "properties": {
+          "finalAmount": {
+            "type": "number",
+            "example": 874.5
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExchangeResponseV1StepsItem"
+            }
+          }
+        },
+        "type": "object"
+      },
+      "CurrencyRateV1": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "USD"
+          },
+          "name": {
+            "type": "string",
+            "example": "Доллар США"
+          },
+          "nominal": {
+            "type": "integer",
+            "example": 1
+          },
+          "rate": {
+            "type": "number",
+            "example": 73.7878
+          }
+        },
+        "type": "object"
+      },
+      "GetCurrencyRatesResponseV1": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/components/schemas/CurrencyRateV1"
+        }
+      }
+    }
+  }
+}

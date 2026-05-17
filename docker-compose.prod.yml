@@ -1,0 +1,13 @@
+version: '3.9'
+
+services:
+  core:
+    container_name: pwa-calculator
+    image: ${CI_REGISTRY_IMAGE}:${CURRENT_VERSION}
+    restart: always
+    networks:
+      - vitasensus-net
+
+networks:
+  vitasensus-net:
+    external: true

@@ -1,0 +1,201 @@
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH =~ /^release\/.+$/'
+
+stages:
+  - lint
+  - build
+  - deploy
+  - rollback
+
+# Шаблоны SSH-подключения
+.ssh-setup-test:
+  before_script:
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - eval $(ssh-agent -s)
+    - echo "${TEST_SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add -
+    - '[[ -f /.dockerenv || -d /run/secrets/kubernetes.io/serviceaccount ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+.ssh-setup-prod:
+  before_script:
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - eval $(ssh-agent -s)
+    - echo "${PROD_SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add -
+    - '[[ -f /.dockerenv || -d /run/secrets/kubernetes.io/serviceaccount ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+# Шаблон сборки образа через Kaniko
+.build-template:
+  stage: build
+  tags:
+    - docker
+  interruptible: true
+  image:
+    name: gcr.io/kaniko-project/executor:v1.24.0-debug
+    entrypoint: [""]
+  script:
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}:${CURRENT_VERSION}"
+      --cache=true
+      --cache-repo "${CI_REGISTRY_IMAGE}/cache"
+  needs:
+    - job: lint
+  artifacts:
+    reports:
+      dotenv: current_version.env
+    expire_in: "5 minutes"
+
+# Проверка линтинга и форматирования
+lint:
+  stage: lint
+  image: node:22-slim
+  tags:
+    - docker
+  interruptible: true
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - node_modules/
+  script:
+    - npm ci
+    - npm run lint
+    - npm run format:check
+
+# Собираем образ для теста
+build-test:
+  extends: .build-template
+  before_script:
+    - |
+      PACKAGE_VERSION=$(grep -m 1 '"version"' package.json | sed -E 's/.*"([^"]+)".*/\1/')
+      CURRENT_VERSION=${PACKAGE_VERSION}
+    - export CURRENT_VERSION=${CURRENT_VERSION:-latest}
+    - echo -e "\nCURRENT_VERSION=${CURRENT_VERSION}" >> "$TEST_ENV_FILE"
+    - echo "CURRENT_VERSION=${CURRENT_VERSION}" > current_version.env
+    - echo "Версия приложения ${CURRENT_VERSION}"
+    - cat $TEST_ENV_FILE > .env
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+deploy-test:
+  stage: deploy
+  image: docker:20.10-git
+  tags:
+    - gitlab-org-docker
+  variables:
+    DOCKER_HOST: "ssh://${TEST_SERVER_USER}@${TEST_SERVER_HOST}"
+  before_script:
+    - echo "Раскатываем на тест ${CURRENT_VERSION}"
+    - echo -e "\nCURRENT_VERSION=${CURRENT_VERSION}" >> "$TEST_ENV_FILE"
+    - !reference [.ssh-setup-test, before_script]
+  script:
+    - docker compose -f docker-compose.prod.yml --env-file $TEST_ENV_FILE pull
+    - docker compose -f docker-compose.prod.yml --env-file $TEST_ENV_FILE down --timeout=60 --remove-orphans
+    - docker compose -f docker-compose.prod.yml --env-file $TEST_ENV_FILE up --detach
+    - docker image prune -f || true
+  needs:
+    - job: build-test
+  dependencies:
+    - build-test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+# Собираем продовый образ
+build-prod:
+  extends: .build-template
+  before_script:
+    - |
+      PACKAGE_VERSION=$(grep -m 1 '"version"' package.json | sed -E 's/.*"([^"]+)".*/\1/')
+      CURRENT_VERSION=${PACKAGE_VERSION}
+    - export CURRENT_VERSION=${CURRENT_VERSION:-latest}
+    - echo -e "\nCURRENT_VERSION=${CURRENT_VERSION}" >> "$PROD_ENV_FILE"
+    - echo "CURRENT_VERSION=${CURRENT_VERSION}" > current_version.env
+    - echo "Версия приложения ${CURRENT_VERSION}"
+    - cat $PROD_ENV_FILE > .env
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^release\/.+$/'
+
+# Раскатываем на прод
+deploy-prod:
+  stage: deploy
+  image: docker:20.10-git
+  tags:
+    - gitlab-org-docker
+  variables:
+    DOCKER_HOST: "ssh://${PROD_SERVER_USER}@${PROD_SERVER_HOST}"
+  before_script:
+    - echo "Раскатываем на прод ${CURRENT_VERSION}"
+    - echo -e "\nCURRENT_VERSION=${CURRENT_VERSION}" >> "$PROD_ENV_FILE"
+    - !reference [.ssh-setup-prod, before_script]
+  script:
+    - docker compose -f docker-compose.prod.yml --env-file $PROD_ENV_FILE pull
+    - docker compose -f docker-compose.prod.yml --env-file $PROD_ENV_FILE down --timeout=60 --remove-orphans
+    - docker compose -f docker-compose.prod.yml --env-file $PROD_ENV_FILE up --detach
+    - docker image prune -f || true
+  needs:
+    - job: build-prod
+  dependencies:
+    - build-prod
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^release\/.+$/'
+
+# Получаем версию до которой откатимся
+prepare-tag:
+  stage: rollback
+  tags:
+    - gitlab-org-node
+  image: alpine:3
+  script:
+    - apk add --no-cache curl jq
+    - |
+      REPOSITORIES=$(curl --silent --header "PRIVATE-TOKEN: ${TOKEN_CI}" "https://gitlab.vitaopus.ru/api/v4/projects/${CI_PROJECT_ID}/registry/repositories")
+      echo "REPOSITORIES: ${REPOSITORIES}"
+
+      REPOSITORY_ID=$(echo "$REPOSITORIES" | jq -r '.[0].project_id')
+
+      REGISTRY_TAGS=$(curl --silent --header "PRIVATE-TOKEN: $TOKEN_CI" "https://gitlab.vitaopus.ru/api/v4/projects/${CI_PROJECT_ID}/registry/repositories/${REPOSITORY_ID}/tags")
+
+      LAST_REGISTRY_TAG=$(echo "$REGISTRY_TAGS" | jq -r 'sort_by(.name | split(".") | map(tonumber)) | reverse | .[1].name')
+
+      echo "Последний тег: $LAST_REGISTRY_TAG"
+
+    - echo "LAST_REGISTRY_TAG=${LAST_REGISTRY_TAG}" > last_tag.env
+    - cat last_tag.env
+  dependencies:
+    - deploy-prod
+  artifacts:
+    reports:
+      dotenv: last_tag.env
+    expire_in: 1 week
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^release\/.+$/'
+      when: manual
+
+# Откатываемся до полученной версии
+rollback-prod:
+  stage: rollback
+  image: docker:20.10-git
+  tags:
+    - gitlab-org-docker
+  variables:
+    DOCKER_HOST: "ssh://${PROD_SERVER_USER}@${PROD_SERVER_HOST}"
+  before_script:
+    - echo "Откатываем до $LAST_REGISTRY_TAG"
+    - echo -e "\nCURRENT_VERSION=${LAST_REGISTRY_TAG}" >> "$PROD_ENV_FILE"
+    - !reference [.ssh-setup-prod, before_script]
+  script:
+    - docker compose -f docker-compose.prod.yml --env-file $PROD_ENV_FILE pull
+    - docker compose -f docker-compose.prod.yml --env-file $PROD_ENV_FILE down --timeout=60 --remove-orphans
+    - docker compose -f docker-compose.prod.yml --env-file $PROD_ENV_FILE up --detach
+    - docker image prune -f || true
+  needs:
+    - job: prepare-tag
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^release\/.+$/'
