@@ -19,7 +19,18 @@ function Root() {
   });
 
   useEffect(() => {
-    serviceExchangeRate.event.getCurrencyRates();
+    const HOUR = 60 * 60 * 1000;
+    let lastFetchedAt = Date.now();
+
+    const handler = () => {
+      if (document.visibilityState === 'visible' && Date.now() - lastFetchedAt >= HOUR) {
+        lastFetchedAt = Date.now();
+        serviceExchangeRate.event.getCurrencyRates();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handler);
+    return () => document.removeEventListener('visibilitychange', handler);
   }, []);
 
   return (

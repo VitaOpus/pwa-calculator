@@ -11,11 +11,11 @@ export interface ExchangeRequestV1 {
 }
 
 export interface ExchangeResponseV1StepsItem {
-  from?: string;
-  to?: string;
-  amountFrom?: number;
-  amountTo?: number;
-  rateFromTo?: number;
+  from: string;
+  to: string;
+  amountFrom: number;
+  amountTo: number;
+  rateFromTo: number;
 }
 
 export interface ExchangeResponseV1 {
@@ -24,10 +24,10 @@ export interface ExchangeResponseV1 {
 }
 
 export interface CurrencyRateV1 {
-  code?: string;
-  name?: string;
-  nominal?: number;
-  rate?: number;
+  code: string;
+  name: string;
+  nominal: number;
+  rate: number;
 }
 
 export interface GetCurrencyRatesResponseV1 {

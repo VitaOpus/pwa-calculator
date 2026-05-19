@@ -1,21 +1,30 @@
-import { ChangeEvent } from 'react';
+import { ChangeEvent, useTransition } from 'react';
 
 import type { SelectValueChangeDetails } from '@chakra-ui/react';
 import { useField } from '@tanstack/react-form';
 import { useUnit } from 'effector-react';
 
-import { modelExchangeRate } from '@/entities/exchange-rate';
-import { useAppFormContext } from '@/shared/lib/form-hook';
+import { useDebounce } from '@/shared/lib';
+import { modelExchangeRate, useAppFormContext } from '@/entities/exchange-rate';
 
 export const useController = () => {
   const form = useAppFormContext();
   const steps = useField({ form, name: 'steps' });
   const amount = useField({ form, name: 'amount' });
+  const [, startTransition] = useTransition();
 
   const { stepsChanged, amountChanged } = useUnit({
     stepsChanged: modelExchangeRate.event.stepsChanged,
-    amountChanged: modelExchangeRate.event.amountChanged
+    amountChanged: modelExchangeRate.event.amountChanged,
   });
+
+  const debouncedAmountChanged = useDebounce(
+    (value: string) =>
+      startTransition(() => {
+        amountChanged(value);
+      }),
+    300,
+  );
 
   const handleAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(',', '.');
@@ -27,7 +36,7 @@ export const useController = () => {
 
     if (Number(value) >= 0) {
       amount.handleChange(value);
-      amountChanged(value);
+      debouncedAmountChanged(value);
     }
   };
 
@@ -36,7 +45,9 @@ export const useController = () => {
       const next = [...steps.state.value];
       next[index] = object.value[0];
       steps.handleChange(next);
-      stepsChanged(next);
+      startTransition(() => {
+        stepsChanged(next);
+      });
     };
   };
 
@@ -47,5 +58,3 @@ export const useController = () => {
     onCurrencyChange: handleCurrencyChange,
   };
 };
-
-export default {};

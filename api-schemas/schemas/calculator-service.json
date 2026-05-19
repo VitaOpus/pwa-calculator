@@ -81,6 +81,7 @@
         "type": "object"
       },
       "ExchangeResponseV1StepsItem": {
+        "required": ["from", "to", "amountFrom", "amountTo", "rateFromTo"],
         "properties": {
           "from": {
             "type": "string",
@@ -121,6 +122,7 @@
         "type": "object"
       },
       "CurrencyRateV1": {
+        "required": ["code", "name", "nominal", "rate"],
         "properties": {
           "code": {
             "type": "string",

@@ -7,7 +7,7 @@ import { AddCurrency } from '../add-currency';
 
 import { useController } from './model.ts';
 
-import type { ExchangeStepV1 } from '@/shared/api';
+import type { ExchangeResponseV1StepsItem } from '@/shared/api';
 import { formatMoney, formatNumberRu } from '@/shared/lib';
 
 export const SelectCurrency = () => {
@@ -16,7 +16,7 @@ export const SelectCurrency = () => {
   return (
     <Flex direction="column" gap="8px">
       {exchangeRate?.steps?.map((step, index) => {
-        const { from, rateFromTo, amountTo, to } = step as ExchangeStepV1;
+        const { from, rateFromTo, amountTo, to } = step as ExchangeResponseV1StepsItem;
         const isAction = count === index + 1;
 
         const currencyKey = currencyMap?.[to]?.value;
