@@ -1,7 +1,7 @@
 import { Button } from '@chakra-ui/react';
 import { useUnit } from 'effector-react';
 
-import { routes } from '@/shared/routing';
+import { routes } from '@/pages/routing';
 
 export const CalculateTranslation = () => {
   const openCalculation = useUnit(routes.exchangeRateCalculation.open);
