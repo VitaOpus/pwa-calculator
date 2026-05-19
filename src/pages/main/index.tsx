@@ -4,6 +4,7 @@ import { FC } from 'react';
 import peopleCurrency from './people_currency.svg';
 
 import { CalculateTranslation } from '@/features/calculate-translation';
+import { InstallPwa } from '@/features/install-pwa';
 
 export const Main: FC = () => {
   return (
@@ -30,8 +31,9 @@ export const Main: FC = () => {
           </Flex>
         </Flex>
         <Flex direction="column" justifyContent="center" alignItems="center" gap="20px">
-          <img src={peopleCurrency} style={{ border: 'none', backgroundColor: '#fff' }} />
+          <img src={peopleCurrency} alt="" style={{ border: 'none', backgroundColor: '#fff' }} />
           <CalculateTranslation />
+          <InstallPwa />
         </Flex>
       </Flex>
       <Box>

@@ -1,6 +1,6 @@
 import { chainRoute } from 'atomic-router';
 
-import { useAppForm } from '@/shared/lib/form-hook';
+import { useAppForm } from '@/entities/exchange-rate';
 import { routes } from '@/shared/routing';
 import { serviceExchangeRate } from '@/shared/service';
 

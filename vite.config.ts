@@ -17,6 +17,21 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png}'],
         navigateFallback: 'index.html',
+        runtimeCaching: [
+          {
+            urlPattern: /\/api\/v1\/rates$/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'currency-rates',
+              expiration: {
+                maxAgeSeconds: 60 * 60, // 1 час — совпадает с серверным кешем
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+        ],
       },
       manifest: {
         name: 'Валютный маршрут',
@@ -29,6 +44,22 @@ export default defineConfig({
         icons: [
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+        ],
+        screenshots: [
+          {
+            src: 'screenshot-desktop.png',
+            sizes: '1280x800',
+            type: 'image/png',
+            form_factor: 'wide',
+            label: 'Валютный маршрут — десктоп',
+          },
+          {
+            src: 'screenshot-mobile.png',
+            sizes: '390x844',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'Валютный маршрут — мобильный',
+          },
         ],
       },
     }),

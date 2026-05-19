@@ -3,8 +3,7 @@ import { useUnit } from 'effector-react';
 
 import type { SelectValueChangeDetails } from '@chakra-ui/react';
 
-import { configExchangeRate, modelExchangeRate } from '@/entities/exchange-rate';
-import { useAppFormContext } from '@/shared/lib/form-hook';
+import { configExchangeRate, modelExchangeRate, useAppFormContext } from '@/entities/exchange-rate';
 
 export const useController = () => {
   const form = useAppFormContext();

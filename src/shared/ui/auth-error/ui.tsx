@@ -3,7 +3,13 @@ import { HiMinusCircle } from 'react-icons/hi';
 
 export function AuthError() {
   return (
-    <Box layerStyle="container" display="flex" justifyContent="center" alignItems="center" m="30px 0 10px 0">
+    <Box
+      layerStyle="container"
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
+      m="30px 0 10px 0"
+    >
       <Flex w="327px" gap="30px" direction="column">
         <EmptyState.Root>
           <EmptyState.Content>

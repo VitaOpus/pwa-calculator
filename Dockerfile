@@ -1,10 +1,12 @@
 # Этап 1 — сборка фронтенда
-FROM node:22-slim AS builder
+FROM mirror.gcr.io/library/node:22-bullseye-slim AS builder
 
 WORKDIR /app
 
+RUN npm config set registry https://npm-registry.vitaopus.ru/
+
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install
 
 COPY . .
 RUN npm run build
