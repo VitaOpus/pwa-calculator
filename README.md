@@ -11,15 +11,30 @@ PWA-приложение для расчёта цепочек валютных �
 
 ## Стек
 
-| Слой       | Технология                               |
-| ---------- | ---------------------------------------- |
-| UI         | React 19, Chakra UI v3                   |
-| Стейт      | Effector                                 |
-| Роутинг    | atomic-router                            |
-| Сборка     | Vite 8                                   |
-| API-клиент | Axios + Orval (кодогенерация из OpenAPI) |
-| PWA        | vite-plugin-pwa (Workbox)                |
-| Типизация  | TypeScript                               |
+### `Ветка main`
+
+| Слой        | Технология                               |
+| ----------- | ---------------------------------------- |
+| UI          | React 19, Chakra UI v3                   |
+| Стейт       | Effector                                 |
+| Роутинг     | atomic-router                            |
+| Сборка      | Vite 8                                   |
+| HTTP-клиент | Axios + Orval (кодогенерация из OpenAPI) |
+| PWA         | vite-plugin-pwa (Workbox)                |
+| Типизация   | TypeScript                               |
+
+### `Ветка React/Query`
+
+| Слой            | Технология                                |
+| --------------- | ----------------------------------------- |
+| UI              | React 19, Chakra UI v3                    |
+| Серверный стейт | TanStack React Query v5                   |
+| UI-стейт        | React Context + `useState`                |
+| Роутинг         | React Router v6                           |
+| Сборка          | Vite 8                                    |
+| HTTP-клиент     | `fetch` (нативный) + Orval (кодогенерация)|
+| PWA             | vite-plugin-pwa (Workbox)                 |
+| Типизация       | TypeScript                                |
 
 ## Локальная разработка
 
