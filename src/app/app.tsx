@@ -1,21 +1,21 @@
-import { RouterProvider, Route } from 'atomic-router-react';
-import { useUnit } from 'effector-react';
-import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 import { Main, ExchangeRateCalculation } from '@/pages';
-import { exchangeRateCalculationRoute } from '@/pages/exchange-rate-calculation/model';
-import { router, routes, history } from '@/pages/routing';
+
+const queryClient = new QueryClient();
+
 export function App() {
-  const setHistory = useUnit(router.setHistory);
-
-  useEffect(() => {
-    setHistory(history);
-  }, [setHistory]);
-
   return (
-    <RouterProvider router={router}>
-      <Route route={routes.main} view={Main} />
-      <Route route={exchangeRateCalculationRoute} view={ExchangeRateCalculation} />
-    </RouterProvider>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Main />} />
+          <Route path="/exchange-rate-calculation" element={<ExchangeRateCalculation />} />
+        </Routes>
+      </BrowserRouter>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   );
 }

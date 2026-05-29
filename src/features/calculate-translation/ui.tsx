@@ -1,17 +1,15 @@
 import { Button } from '@chakra-ui/react';
-import { useUnit } from 'effector-react';
-
-import { routes } from '@/pages/routing';
+import { useNavigate } from 'react-router-dom';
 
 export const CalculateTranslation = () => {
-  const openCalculation = useUnit(routes.exchangeRateCalculation.open);
+  const navigate = useNavigate();
 
   return (
     <Button
       variant="solid"
       w="188px"
       mt={{ base: 0, sm: '30px' }}
-      onClick={() => openCalculation()}
+      onClick={() => navigate('/exchange-rate-calculation')}
     >
       Рассчитать перевод
     </Button>

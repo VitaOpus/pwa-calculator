@@ -122,7 +122,6 @@
         "type": "object"
       },
       "CurrencyRateV1": {
-        "required": ["code", "name", "nominal", "rate"],
         "properties": {
           "code": {
             "type": "string",

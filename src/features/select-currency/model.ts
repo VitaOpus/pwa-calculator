@@ -1,25 +1,23 @@
 import { useTransition } from 'react';
 
 import { useField } from '@tanstack/react-form';
-import { useUnit } from 'effector-react';
 
 import type { SelectValueChangeDetails } from '@chakra-ui/react';
 
-import { configExchangeRate, modelExchangeRate, useAppFormContext } from '@/entities/exchange-rate';
-import { serviceExchangeRate } from '@/shared/service';
+import {
+  configExchangeRate,
+  useAppFormContext,
+  useExchangeRateContext,
+} from '@/entities/exchange-rate';
 
 export const useController = () => {
   const form = useAppFormContext();
   const steps = useField({ form, name: 'steps' });
+  const amount = useField({ form, name: 'amount' });
   const [, startTransition] = useTransition();
+  const { exchangeResult, onStepsChange } = useExchangeRateContext();
 
-  const stepsChanged = useUnit(modelExchangeRate.event.stepsChanged);
-
-  const { exchangeRate } = useUnit({
-    exchangeRate: serviceExchangeRate.store.$exchangeRate,
-  });
-
-  const count = exchangeRate?.steps?.length ?? 0;
+  const count = exchangeResult?.steps?.length ?? 0;
   const currency = configExchangeRate.Currency;
 
   const currencyMap = currency.reduce<Record<string, (typeof currency)[0]>>((acc, cur) => {
@@ -32,7 +30,7 @@ export const useController = () => {
       next[index] = object.value[0];
       steps.handleChange(next);
       startTransition(() => {
-        stepsChanged(next);
+        onStepsChange(next, amount.state.value);
       });
     };
   };
@@ -41,7 +39,7 @@ export const useController = () => {
     const next = steps.state.value.filter((_: string, i: number) => i !== index + 1);
     steps.handleChange(next);
     startTransition(() => {
-      stepsChanged(next);
+      onStepsChange(next, amount.state.value);
     });
   };
 
@@ -49,14 +47,14 @@ export const useController = () => {
     const next = [...steps.state.value, data.value[0]];
     steps.handleChange(next);
     startTransition(() => {
-      stepsChanged(next);
+      onStepsChange(next, amount.state.value);
     });
   };
 
   return {
     currency,
     currencyMap,
-    exchangeRate,
+    exchangeRate: exchangeResult,
     count,
     onCurrencyChange: handleCurrencyChange,
     onDelete: handleDelete,

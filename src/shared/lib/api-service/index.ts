@@ -1,5 +1,3 @@
-import axios, { AxiosRequestConfig, AxiosPromise, AxiosInstance, AxiosError } from 'axios';
-
 type AppSettings = Record<string, string>;
 
 interface AuthData {
@@ -7,45 +5,28 @@ interface AuthData {
   token_type: string;
 }
 
-type SerializeParams = string | string[][] | Record<string, string> | URLSearchParams;
+export interface RequestConfig {
+  url: string;
+  method: string;
+  headers?: Record<string, string>;
+  data?: unknown;
+  params?: Record<string, string> | URLSearchParams;
+}
 
 export default class ApiService {
   private static INSTANCE?: ApiService;
 
-  private axios: AxiosInstance;
+  private baseURL: string = '';
 
-  private endpoints: Partial<AppSettings>;
+  private commonHeaders: Record<string, string> = {};
+
+  private endpoints: Partial<AppSettings> = {};
 
   private initData: string = '';
 
-  private constructor() {
-    this.axios = axios.create({
-      validateStatus: (status: number) => status >= 200 && status < 400,
-      paramsSerializer: (params?: SerializeParams) => new URLSearchParams(params).toString(),
-    });
+  private readonly TIMEOUT_MS = 10_000;
 
-    this.axios.interceptors.request.use((config) => {
-      config.timeout = 10000;
-      return config;
-    });
-
-    this.axios.interceptors.response.use(
-      (response) => response,
-      (error: AxiosError) => {
-        if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
-          console.log('Request timed out');
-        }
-
-        if (error.response?.status === 401) {
-          console.error('Error code 401');
-        }
-
-        return Promise.reject(error);
-      },
-    );
-
-    this.endpoints = {};
-  }
+  private constructor() {}
 
   public static getInstance(): ApiService {
     if (!ApiService.INSTANCE) {
@@ -57,7 +38,7 @@ export default class ApiService {
 
   public setAuthorization(access: AuthData): void {
     if (access) {
-      this.axios.defaults.headers.common.Authorization = `${access.token_type} ${access.access_token}`;
+      this.commonHeaders['Authorization'] = `${access.token_type} ${access.access_token}`;
     }
   }
 
@@ -67,7 +48,7 @@ export default class ApiService {
     }
 
     this.initData = initData;
-    this.axios.defaults.headers.common['x-telegram-initdata'] = this.initData;
+    this.commonHeaders['x-telegram-initdata'] = this.initData;
   }
 
   public setAppSettings(appSettings: Partial<AppSettings>): void {
@@ -75,33 +56,69 @@ export default class ApiService {
   }
 
   public setBaseUrl(baseUrl: string): void {
-    this.axios.defaults.baseURL = baseUrl;
+    this.baseURL = baseUrl;
   }
 
-  public selectAppSetting(endpoint: string) {
+  public selectAppSetting(endpoint: string): void {
     if (!this.endpoints[endpoint]) {
       throw new Error(`Not fined endpoint ${endpoint} to AppSetting`);
     }
 
-    this.axios.defaults.headers.common['X-System-Id'] = 'mini-app-calculator';
-    this.axios.defaults.baseURL = this.endpoints[endpoint];
+    this.commonHeaders['X-System-Id'] = 'mini-app-calculator';
+    this.baseURL = this.endpoints[endpoint]!;
   }
 
-  //public setAuthorization({ access }: AuthData): void {
-  //  if (access) {
-  //    this.axios.defaults.headers.common.Authorization = `${access.token_type} ${access.access_token}`;
-  //    this.axios.defaults.headers.common['Id-Token'] = access.id_token;
-  //  }
-  //}
+  public async call<R>(config: RequestConfig): Promise<{ data: R }> {
+    const { url, method, data, params, headers: configHeaders = {} } = config;
 
-  public call<R>(data: AxiosRequestConfig): AxiosPromise<R> {
-    return this.axios.request(data);
+    // paramsSerializer: воспроизводит new URLSearchParams(params).toString()
+    const queryString = params
+      ? new URLSearchParams(params as Record<string, string>).toString()
+      : '';
+    const fullUrl = `${this.baseURL}${url}${queryString ? `?${queryString}` : ''}`;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT_MS);
+
+    let response: Response;
+    try {
+      response = await fetch(fullUrl, {
+        method,
+        headers: {
+          ...this.commonHeaders,
+          ...configHeaders,
+          ...(data !== undefined ? { 'Content-Type': 'application/json' } : {}),
+        },
+        body: data !== undefined ? JSON.stringify(data) : undefined,
+        signal: controller.signal,
+      });
+    } catch (error) {
+      clearTimeout(timeoutId);
+      // воспроизводит error.code === 'ECONNABORTED' && error.message.includes('timeout')
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        console.log('Request timed out');
+      }
+      throw error;
+    }
+
+    clearTimeout(timeoutId);
+
+    // воспроизводит validateStatus: status >= 200 && status < 400
+    if (response.status < 200 || response.status >= 400) {
+      if (response.status === 401) {
+        console.error('Error code 401');
+      }
+      throw new Error(`HTTP error ${response.status}`);
+    }
+
+    const responseData: R = await response.json();
+    return { data: responseData };
   }
 
   public static destroy(): void {
     if (ApiService.INSTANCE) {
-      ApiService.INSTANCE.axios.defaults.headers.common.Authorization = undefined;
-      ApiService.INSTANCE.axios.defaults.headers.common['Id-Token'] = undefined;
+      delete ApiService.INSTANCE.commonHeaders['Authorization'];
+      delete ApiService.INSTANCE.commonHeaders['Id-Token'];
       ApiService.INSTANCE = undefined;
     }
   }

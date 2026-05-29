@@ -1,13 +1,4 @@
-import { chainRoute } from 'atomic-router';
-
 import { useAppForm } from '@/entities/exchange-rate';
-import { routes } from '@/pages/routing';
-import { serviceExchangeRate } from '@/shared/service';
-
-export const exchangeRateCalculationRoute = chainRoute({
-  route: routes.exchangeRateCalculation,
-  beforeOpen: serviceExchangeRate.effect.getCurrencyRatesFx,
-});
 
 export const usePageForm = () =>
   useAppForm({

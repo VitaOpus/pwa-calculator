@@ -1,9 +1,8 @@
-import { AxiosRequestConfig } from 'axios';
+import ApiService, { type RequestConfig } from '@/shared/lib/api-service';
 
-import { ApiService } from '@/shared/lib';
 import { ENDPOINT } from '@/shared/config';
 
-export function calculatorInstance<T>(config: AxiosRequestConfig): Promise<T> {
+export function calculatorInstance<T>(config: RequestConfig): Promise<T> {
   const apiService = ApiService.getInstance();
   apiService.selectAppSetting(ENDPOINT.CALCULATOR_SERVICE);
 

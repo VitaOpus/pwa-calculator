@@ -1,8 +1,5 @@
 import { createFormHook, createFormHookContexts } from '@tanstack/react-form';
 import type { ReactFormExtendedApi } from '@tanstack/react-form';
-import { useUnit } from 'effector-react';
-
-import { serviceExchangeRate } from '@/shared/service';
 
 export const { fieldContext, formContext, useFormContext } = createFormHookContexts();
 
@@ -32,8 +29,4 @@ type AppForm = ReactFormExtendedApi<
 
 export const useAppFormContext = (): AppForm => {
   return useFormContext() as unknown as AppForm;
-};
-
-export const useLoading = () => {
-  return useUnit(serviceExchangeRate.store.$loading);
 };
