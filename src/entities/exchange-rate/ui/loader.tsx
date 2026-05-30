@@ -1,8 +1,8 @@
-import { useLoading } from '@/entities/exchange-rate';
+import { useExchangeRateContext } from '@/shared/service/exchange-rate';
 import { Loader as UiLoader } from '@/shared/ui';
 
 export const Loader = () => {
-  const loading = useLoading();
+  const { isPending: loading } = useExchangeRateContext();
 
   if (!loading) {
     return null;

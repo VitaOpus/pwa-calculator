@@ -3,12 +3,9 @@ import { FC } from 'react';
 
 import { usePageForm } from './model';
 
-import {
-  ExchangeRateContext,
-  Loader,
-  useCurrencyRates,
-  useExchangeCalculation,
-} from '@/entities/exchange-rate';
+import { ExchangeRateContext, useCurrencyRates } from '@/shared/service/exchange-rate';
+
+import { Loader, useExchangeCalculation } from '@/entities/exchange-rate';
 import { SelectCurrency, SelectStartCurrency } from '@/features';
 import { Loading } from '@/shared/ui';
 

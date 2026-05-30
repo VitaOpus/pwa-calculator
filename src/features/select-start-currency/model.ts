@@ -3,7 +3,9 @@ import { ChangeEvent, useTransition } from 'react';
 import type { SelectValueChangeDetails } from '@chakra-ui/react';
 import { useField } from '@tanstack/react-form';
 
-import { useAppFormContext, useExchangeRateContext } from '@/entities/exchange-rate';
+import { useExchangeRateContext } from '@/shared/service/exchange-rate';
+
+import { useAppFormContext } from '@/entities/exchange-rate';
 import { useDebounce } from '@/shared/lib';
 
 export const useController = () => {

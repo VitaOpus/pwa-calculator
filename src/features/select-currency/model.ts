@@ -4,18 +4,17 @@ import { useField } from '@tanstack/react-form';
 
 import type { SelectValueChangeDetails } from '@chakra-ui/react';
 
-import {
-  configExchangeRate,
-  useAppFormContext,
-  useExchangeRateContext,
-} from '@/entities/exchange-rate';
+import { useExchangeRateContext } from '@/shared/service/exchange-rate';
+
+import { configExchangeRate, useAppFormContext, useExchangeStore } from '@/entities/exchange-rate';
 
 export const useController = () => {
   const form = useAppFormContext();
   const steps = useField({ form, name: 'steps' });
   const amount = useField({ form, name: 'amount' });
   const [, startTransition] = useTransition();
-  const { exchangeResult, onStepsChange } = useExchangeRateContext();
+  const { onStepsChange } = useExchangeRateContext();
+  const exchangeResult = useExchangeStore((s) => s.exchangeResult);
 
   const count = exchangeResult?.steps?.length ?? 0;
   const currency = configExchangeRate.Currency;

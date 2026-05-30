@@ -1,44 +1,71 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 
-import type { ExchangeResponseV1 } from '@/shared/api';
-
-import type { ExchangeRateContextValue } from './ExchangeCalculationContext';
-import { useCalculateLocalMutation } from './useCalculateLocalMutation';
-import { useCurrencyRates } from './useCurrencyRates';
-import { useExchangeMutation } from './useExchangeMutation';
+import {
+  CALCULATION_SOURCE,
+  calculateLocal,
+  useCurrencyRates,
+  useExchangeMutation,
+  type ExchangeRateContextValue,
+} from '@/shared/service/exchange-rate';
+import { useExchangeStore } from '../store';
 
 export const useExchangeCalculation = (): ExchangeRateContextValue => {
   const { data: currencyRates } = useCurrencyRates();
-  const { mutate: exchangeMutate, isPending: exchangePending } = useExchangeMutation();
-  const { mutate: calculateMutate, isPending: calculatePending } = useCalculateLocalMutation();
-  const [exchangeResult, setExchangeResult] = useState<ExchangeResponseV1 | null>(null);
+  const { mutate: exchangeMutate } = useExchangeMutation();
+  const { isPending, setExchangeResult, setIsPending, setError } = useExchangeStore();
+
+  const calculate = useCallback(
+    (steps: string[], amount: string) => {
+      if (CALCULATION_SOURCE === 'server') {
+        setIsPending(true);
+        setError(null);
+        exchangeMutate(
+          { steps, amount },
+          {
+            onSuccess: (data) => {
+              setExchangeResult(data);
+              setIsPending(false);
+            },
+            onError: (err) => {
+              setError(err instanceof Error ? err : new Error(String(err)));
+              setIsPending(false);
+            },
+          },
+        );
+      } else if (currencyRates) {
+        setIsPending(true);
+        setError(null);
+        calculateLocal({ amount, steps, rates: currencyRates }).then((data) => {
+          setExchangeResult(data);
+          setIsPending(false);
+        });
+      }
+    },
+    [currencyRates, exchangeMutate, setError, setExchangeResult, setIsPending],
+  );
 
   const onStepsChange = useCallback(
     (steps: string[], amount: string) => {
-      if (steps.length > 1 && currencyRates) {
-        calculateMutate(
-          { amount, steps, rates: currencyRates },
-          { onSuccess: (data) => setExchangeResult(data) },
-        );
+      if (steps.length > 1) {
+        calculate(steps, amount);
       } else {
         setExchangeResult(null);
       }
     },
-    [calculateMutate, currencyRates],
+    [calculate, setExchangeResult],
   );
 
   const onAmountChange = useCallback(
     (amount: string, steps: string[]) => {
       if (steps.length > 1 && Number(amount) > 0) {
-        exchangeMutate({ steps, amount }, { onSuccess: (data) => setExchangeResult(data) });
+        calculate(steps, amount);
       }
     },
-    [exchangeMutate],
+    [calculate],
   );
 
   return {
-    exchangeResult,
-    isPending: exchangePending || calculatePending,
+    isPending,
     onStepsChange,
     onAmountChange,
   };

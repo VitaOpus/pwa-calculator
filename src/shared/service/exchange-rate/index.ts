@@ -1,1 +1,3 @@
-export * as effect from './effect';
+export * from './config';
+export * from './effect';
+export * from './queries';
