@@ -11,30 +11,41 @@ PWA-приложение для расчёта цепочек валютных �
 
 ## Стек
 
-### `Ветка main`
+### `Общее для всех веток`
+
 
 | Слой        | Технология                               |
 | ----------- | ---------------------------------------- |
 | UI          | React 19, Chakra UI v3                   |
-| Стейт       | Effector                                 |
-| Роутинг     | atomic-router                            |
 | Сборка      | Vite 8                                   |
-| HTTP-клиент | Axios + Orval (кодогенерация из OpenAPI) |
 | PWA         | vite-plugin-pwa (Workbox)                |
 | Типизация   | TypeScript                               |
+
+### `Ветка main`
+
+| Слой        | Технология                               |
+| ----------- | ---------------------------------------- |
+| Стейт       | Effector                                 |
+| Роутинг     | atomic-router                            |
+| HTTP-клиент | Axios + Orval (кодогенерация из OpenAPI) |
 
 ### `Ветка React/Query`
 
 | Слой            | Технология                                |
 | --------------- | ----------------------------------------- |
-| UI              | React 19, Chakra UI v3                    |
 | Серверный стейт | TanStack React Query v5                   |
 | UI-стейт        | React Context + `useState`                |
 | Роутинг         | React Router v6                           |
-| Сборка          | Vite 8                                    |
 | HTTP-клиент     | `fetch` (нативный) + Orval (кодогенерация)|
-| PWA             | vite-plugin-pwa (Workbox)                 |
-| Типизация       | TypeScript                                |
+
+### `Ветка Zustand/ReactQuery`
+
+| Слой            | Технология                                |
+| --------------- | ----------------------------------------- |
+| Серверный стейт | TanStack React Query v5                   |
+| UI-стейт        | Zustand                                   |
+| Роутинг         | React Router v6                           |
+| HTTP-клиент     | `fetch` (нативный) + Orval (кодогенерация)|
 
 ## Локальная разработка
 
