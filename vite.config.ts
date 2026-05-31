@@ -14,24 +14,11 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      workbox: {
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectManifest: {
         globPatterns: ['**/*.{js,css,html,svg,png}'],
-        navigateFallback: 'index.html',
-        runtimeCaching: [
-          {
-            urlPattern: /\/api\/v1\/rates$/,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'currency-rates',
-              expiration: {
-                maxAgeSeconds: 60 * 60, // 1 час — совпадает с серверным кешем
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-        ],
       },
       manifest: {
         name: 'Валютный маршрут',

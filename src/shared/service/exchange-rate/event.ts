@@ -9,9 +9,7 @@ import { calculateLocalFx, exchangeRateFx, getCurrencyRatesFx } from './effect';
 import { $loading, $exchangeRate, $currencyRates } from './store';
 
 export const exchangeRate = createEvent<ExchangeRequestV1>();
-
 export const exchangeLocalRate = createEvent<ExchangeRequestV1>();
-
 export const getCurrencyRates = createEvent<void>();
 
 // Запускаем эффект расчёта курса и сохраняем результат
