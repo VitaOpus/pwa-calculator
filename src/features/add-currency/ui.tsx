@@ -1,13 +1,4 @@
-import {
-  Box,
-  IconButton,
-  Select,
-  Portal,
-  createListCollection,
-  Text,
-  Dialog,
-  CloseButton,
-} from '@chakra-ui/react';
+import { Box, IconButton, Select, Portal, Text, Dialog, CloseButton } from '@chakra-ui/react';
 import { IoIosAddCircle } from 'react-icons/io';
 
 import { useController } from './model';
@@ -17,22 +8,16 @@ interface Props {
 }
 
 export const AddCurrency = ({ isAction }: Props) => {
-  const { currency, onSelect } = useController();
+  const { collection, onSelect, onVibrate } = useController();
 
   if (!isAction) {
     return null;
   }
 
-  const frameworks = createListCollection({
-    items: currency,
-    itemToString: (item) => `${item.flag} ${item.label}`,
-    itemToValue: (item) => item.value,
-  });
-
   return (
     <Dialog.Root>
       <Dialog.Trigger asChild>
-        <Box display="flex" flexDirection="row" alignItems="center" gap="10px">
+        <Box display="flex" flexDirection="row" alignItems="center" gap="10px" onClick={onVibrate}>
           <IconButton aria-label="Удалить" rounded="full" variant="ghost">
             <IoIosAddCircle
               style={{
@@ -58,7 +43,7 @@ export const AddCurrency = ({ isAction }: Props) => {
               <Dialog.Title>Выбор валюты</Dialog.Title>
             </Dialog.Header>
             <Dialog.Body>
-              <Select.Root collection={frameworks} size="lg" onValueChange={onSelect}>
+              <Select.Root collection={collection} size="lg" onValueChange={onSelect}>
                 <Select.HiddenSelect />
                 <Select.Label>Валюты</Select.Label>
                 <Select.Control>
@@ -71,7 +56,7 @@ export const AddCurrency = ({ isAction }: Props) => {
                 </Select.Control>
                 <Select.Positioner>
                   <Select.Content>
-                    {frameworks.items.map((item) => (
+                    {collection.items.map((item) => (
                       <Select.Item item={item} key={item.value}>
                         {item.flag} {item.label}
                       </Select.Item>
@@ -88,4 +73,3 @@ export const AddCurrency = ({ isAction }: Props) => {
   );
 };
 
-export default AddCurrency;

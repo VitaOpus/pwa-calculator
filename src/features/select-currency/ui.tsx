@@ -7,23 +7,21 @@ import { AddCurrency } from '../add-currency';
 
 import { useController } from './model.ts';
 
-import type { ExchangeResponseV1StepsItem } from '@/shared/api';
 import { formatMoney, formatNumberRu } from '@/shared/lib';
 
 export const SelectCurrency = () => {
-  const { exchangeRate, count, currencyMap, onDelete } = useController();
+  const { enrichedSteps, currencyMap, onDelete } = useController();
 
   return (
     <Flex direction="column" gap="8px">
-      {exchangeRate?.steps?.map((step, index) => {
-        const { from, rateFromTo, amountTo, to } = step as ExchangeResponseV1StepsItem;
-        const isAction = count === index + 1;
+      {enrichedSteps.map((step, index) => {
+        const { from, to, rateFromTo, amountTo, isAction } = step;
 
         const currencyKey = currencyMap?.[to]?.value;
         const flag = currencyMap?.[to]?.flag;
 
         return (
-          <Fragment key={`${from}-${index}-${to}`}>
+          <Fragment key={`${from}-${to}`}>
             <Flex direction="column" gap="16px">
               <Flex alignItems="center" gap="10px">
                 <BsArrowUpCircleFill size="30" style={{ color: 'rgb(148, 163, 184)' }} />

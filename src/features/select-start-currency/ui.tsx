@@ -1,18 +1,11 @@
-import { Box, Flex, Input, Select, Portal, createListCollection, Text } from '@chakra-ui/react';
+import { Box, Flex, Input, Select, Portal, Text } from '@chakra-ui/react';
 
 import { useController } from './model.ts';
 
-import { configExchangeRate } from '@/entities/exchange-rate';
 import { AddCurrency } from '@/features/add-currency';
 
 export const SelectStartCurrency = () => {
-  const { amount, isButAdd, onAmountChange, onCurrencyChange } = useController();
-
-  const frameworks = createListCollection({
-    items: configExchangeRate.Currency,
-    itemToString: (item) => `${item.flag} ${item.label}`,
-    itemToValue: (item) => item.value,
-  });
+  const { collection, amount, canAddCurrency, onAmountChange, onCurrencyChange } = useController();
 
   return (
     <>
@@ -35,9 +28,8 @@ export const SelectStartCurrency = () => {
             onChange={onAmountChange}
           />
           <Select.Root
-            collection={frameworks}
+            collection={collection}
             size="sm"
-            id="123"
             width="150px"
             defaultValue={['USD']}
             onValueChange={onCurrencyChange(0)}
@@ -53,9 +45,9 @@ export const SelectStartCurrency = () => {
             <Portal>
               <Select.Positioner>
                 <Select.Content>
-                  {frameworks.items.map((framework) => (
-                    <Select.Item item={framework} key={framework.value}>
-                      {framework.flag} {framework.label}
+                  {collection.items.map((item) => (
+                    <Select.Item item={item} key={item.value}>
+                      {item.flag} {item.label}
                       <Select.ItemIndicator />
                     </Select.Item>
                   ))}
@@ -65,7 +57,7 @@ export const SelectStartCurrency = () => {
           </Select.Root>
         </Flex>
       </Box>
-      <AddCurrency isAction={isButAdd} />
+      <AddCurrency isAction={canAddCurrency} />
     </>
   );
 };

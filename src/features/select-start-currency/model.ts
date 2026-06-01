@@ -1,11 +1,12 @@
-import { ChangeEvent, useTransition } from 'react';
+import { ChangeEvent, useTransition, useMemo } from 'react';
 
 import type { SelectValueChangeDetails } from '@chakra-ui/react';
+import { createListCollection } from '@chakra-ui/react';
 import { useField } from '@tanstack/react-form';
 import { useUnit } from 'effector-react';
 
 import { useDebounce } from '@/shared/lib';
-import { modelExchangeRate, useAppFormContext } from '@/entities/exchange-rate';
+import { configExchangeRate, modelExchangeRate, useAppFormContext } from '@/entities/exchange-rate';
 
 export const useController = () => {
   const form = useAppFormContext();
@@ -17,6 +18,16 @@ export const useController = () => {
     stepsChanged: modelExchangeRate.event.stepsChanged,
     amountChanged: modelExchangeRate.event.amountChanged,
   });
+
+  const collection = useMemo(
+    () =>
+      createListCollection({
+        items: configExchangeRate.Currency,
+        itemToString: (item) => `${item.flag} ${item.label}`,
+        itemToValue: (item) => item.value,
+      }),
+    [],
+  );
 
   const debouncedAmountChanged = useDebounce(
     (value: string) =>
@@ -52,7 +63,8 @@ export const useController = () => {
   };
 
   return {
-    isButAdd: steps.state.value.length === 1,
+    collection,
+    canAddCurrency: steps.state.value.length === 1,
     amount: amount.state.value,
     onAmountChange: handleAmountChange,
     onCurrencyChange: handleCurrencyChange,

@@ -35,5 +35,6 @@ sample({
   source: $steps,
   filter: (steps, amount) => steps.length > 1 && Number(amount) > 0,
   fn: (steps, amount) => ({ steps, amount }),
-  target: serviceExchangeRate.event.exchangeRate,
+  //target: serviceExchangeRate.event.exchangeRate, // real-time calculation
+  target: serviceExchangeRate.event.exchangeLocalRate, // local calculation
 });

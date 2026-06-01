@@ -1,10 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 
-type BeforeInstallPromptEvent = Event & {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-};
-
 export const useController = () => {
   const promptRef = useRef<BeforeInstallPromptEvent | null>(null);
 

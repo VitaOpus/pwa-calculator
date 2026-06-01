@@ -1,9 +1,7 @@
-import { useTransition } from 'react';
+import { useTransition, useMemo } from 'react';
 
 import { useField } from '@tanstack/react-form';
 import { useUnit } from 'effector-react';
-
-import type { SelectValueChangeDetails } from '@chakra-ui/react';
 
 import { configExchangeRate, modelExchangeRate, useAppFormContext } from '@/entities/exchange-rate';
 import { serviceExchangeRate } from '@/shared/service';
@@ -20,22 +18,24 @@ export const useController = () => {
   });
 
   const count = exchangeRate?.steps?.length ?? 0;
-  const currency = configExchangeRate.Currency;
 
-  const currencyMap = currency.reduce<Record<string, (typeof currency)[0]>>((acc, cur) => {
-    return { ...acc, [cur.value]: cur };
-  }, {});
+  const enrichedSteps = useMemo(
+    () =>
+      exchangeRate?.steps?.map((step, index) => ({
+        ...step,
+        isAction: count === index + 1,
+      })) ?? [],
+    [exchangeRate?.steps, count],
+  );
 
-  const handleCurrencyChange = (index: number) => {
-    return (object: SelectValueChangeDetails) => {
-      const next = [...steps.state.value];
-      next[index] = object.value[0];
-      steps.handleChange(next);
-      startTransition(() => {
-        stepsChanged(next);
-      });
-    };
-  };
+  const currencyMap = useMemo(
+    () =>
+      configExchangeRate.Currency.reduce<Record<string, (typeof configExchangeRate.Currency)[0]>>(
+        (acc, cur) => ({ ...acc, [cur.value]: cur }),
+        {},
+      ),
+    [],
+  );
 
   const handleDelete = (index: number) => () => {
     const next = steps.state.value.filter((_: string, i: number) => i !== index + 1);
@@ -45,23 +45,9 @@ export const useController = () => {
     });
   };
 
-  const handleSelect = (data: SelectValueChangeDetails) => {
-    const next = [...steps.state.value, data.value[0]];
-    steps.handleChange(next);
-    startTransition(() => {
-      stepsChanged(next);
-    });
-  };
-
   return {
-    currency,
+    enrichedSteps,
     currencyMap,
-    exchangeRate,
-    count,
-    onCurrencyChange: handleCurrencyChange,
     onDelete: handleDelete,
-    onSelect: handleSelect,
   };
 };
-
-export default {};

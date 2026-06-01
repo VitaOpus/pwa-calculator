@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { ChakraProvider } from '@chakra-ui/react';
 
-import { ApiService } from '@/shared/lib';
+import { ApiService, registerPeriodicSync } from '@/shared/lib';
 import { ErrorBoundary, ErrorBoundaryError } from '@/shared/ui';
 
 import { system } from './style.ts';
@@ -19,6 +19,13 @@ function Root() {
   });
 
   useEffect(() => {
+    // Обновление данных в кеше SW по истечении серверного TTL с дефолтом в 1ч (не работает в Safari)
+    void registerPeriodicSync('currency-rates', 60 * 60 * 1000);
+  }, []);
+
+  useEffect(() => {
+    // Запрос на обновление данных когда пользователь возвращается на вкладку после того как она была скрыта
+    // Это еще один вариант предзагрузки данных
     const HOUR = 60 * 60 * 1000;
     let lastFetchedAt = Date.now();
 
