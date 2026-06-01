@@ -81,6 +81,9 @@ install:
   tags:
     - docker
   interruptible: true
+  before_script:
+    - npm config set registry https://npm-registry.vitaopus.ru/
+    - test -d node_modules/.bin || npm install
   cache:
     key:
       files:

@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { ChakraProvider } from '@chakra-ui/react';
 
-import { ApiService, registerPeriodicSync } from '@/shared/lib';
+import { ApiService } from '@/shared/lib';
+import { registerPeriodicSync } from '@/shared/lib/periodic-sync';
 import { ErrorBoundary, ErrorBoundaryError } from '@/shared/ui';
 
 import { system } from './style.ts';
