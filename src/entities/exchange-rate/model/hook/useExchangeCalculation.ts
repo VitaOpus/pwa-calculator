@@ -1,22 +1,16 @@
 import { useCallback } from 'react';
 
-import {
-  CALCULATION_SOURCE,
-  calculateLocal,
-  useCurrencyRates,
-  useExchangeMutation,
-  type ExchangeRateContextValue,
-} from '@/shared/service/exchange-rate';
+import { serviceExchangeRate } from '@/shared/service';
 import { useExchangeStore } from '../store';
 
-export const useExchangeCalculation = (): ExchangeRateContextValue => {
-  const { data: currencyRates } = useCurrencyRates();
-  const { mutate: exchangeMutate } = useExchangeMutation();
+export const useExchangeCalculation = (): serviceExchangeRate.ExchangeRateContextValue => {
+  const { data: currencyRates } = serviceExchangeRate.useCurrencyRates();
+  const { mutate: exchangeMutate } = serviceExchangeRate.useExchangeMutation();
   const { isPending, setExchangeResult, setIsPending, setError } = useExchangeStore();
 
   const calculate = useCallback(
     (steps: string[], amount: string) => {
-      if (CALCULATION_SOURCE === 'server') {
+      if (serviceExchangeRate.CALCULATION_SOURCE === 'server') {
         setIsPending(true);
         setError(null);
         exchangeMutate(
@@ -35,7 +29,7 @@ export const useExchangeCalculation = (): ExchangeRateContextValue => {
       } else if (currencyRates) {
         setIsPending(true);
         setError(null);
-        calculateLocal({ amount, steps, rates: currencyRates }).then((data) => {
+        serviceExchangeRate.calculateLocal({ amount, steps, rates: currencyRates }).then((data) => {
           setExchangeResult(data);
           setIsPending(false);
         });

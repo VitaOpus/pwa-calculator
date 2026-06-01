@@ -6,7 +6,7 @@ import type { SelectValueChangeDetails } from '@chakra-ui/react';
 
 import { useExchangeRateContext } from '@/shared/service/exchange-rate';
 
-import { configExchangeRate, useAppFormContext, useExchangeStore } from '@/entities/exchange-rate';
+import { useAppFormContext, useExchangeStore } from '@/entities/exchange-rate';
 
 export const useController = () => {
   const form = useAppFormContext();
@@ -15,13 +15,10 @@ export const useController = () => {
   const [, startTransition] = useTransition();
   const { onStepsChange } = useExchangeRateContext();
   const exchangeResult = useExchangeStore((s) => s.exchangeResult);
+  const currency = useExchangeStore((s) => s.currency);
+  const currencyMap = useExchangeStore((s) => s.currencyMap);
 
   const count = exchangeResult?.steps?.length ?? 0;
-  const currency = configExchangeRate.Currency;
-
-  const currencyMap = currency.reduce<Record<string, (typeof currency)[0]>>((acc, cur) => {
-    return { ...acc, [cur.value]: cur };
-  }, {});
 
   const handleCurrencyChange = (index: number) => {
     return (object: SelectValueChangeDetails) => {
@@ -60,5 +57,3 @@ export const useController = () => {
     onSelect: handleSelect,
   };
 };
-
-export default {};

@@ -1,5 +1,5 @@
 import { Button } from '@chakra-ui/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 
 export const CalculateTranslation = () => {
   const navigate = useNavigate();
@@ -9,7 +9,7 @@ export const CalculateTranslation = () => {
       variant="solid"
       w="188px"
       mt={{ base: 0, sm: '30px' }}
-      onClick={() => navigate('/exchange-rate-calculation')}
+      onClick={() => navigate({ to: '/exchange-rate-calculation' })}
     >
       Рассчитать перевод
     </Button>

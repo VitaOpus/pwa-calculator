@@ -24,7 +24,7 @@ export default defineConfig({
             options: {
               cacheName: 'currency-rates',
               expiration: {
-                maxAgeSeconds: 60 * 60, // 1 час — совпадает с серверным кешем
+                maxAgeSeconds: 5 * 60, // 1 час — совпадает с серверным кешем
               },
               cacheableResponse: {
                 statuses: [0, 200],

@@ -1,7 +1,12 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useLayoutEffect } from 'react';
 
 export const useThrottle = <T extends unknown[]>(fn: (...args: T) => void, limit: number) => {
   const lastCallRef = useRef<number>(0);
+  const fnRef = useRef(fn);
+
+  useLayoutEffect(() => {
+    fnRef.current = fn;
+  });
 
   return useCallback(
     (...args: T) => {
@@ -9,9 +14,9 @@ export const useThrottle = <T extends unknown[]>(fn: (...args: T) => void, limit
 
       if (now - lastCallRef.current >= limit) {
         lastCallRef.current = now;
-        fn(...args);
+        fnRef.current(...args);
       }
     },
-    [fn, limit],
+    [limit],
   );
 };

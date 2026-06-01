@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery } from '@tanstack/react-query';
 
 import { exchangeCurrency, getCurrencyRates } from '@/shared/api';
 
@@ -12,21 +12,25 @@ export interface ExchangeRateContextValue {
   onAmountChange: (amount: string, steps: string[]) => void;
 }
 
-export const ExchangeRateContext = createContext<ExchangeRateContextValue>({
-  isPending: false,
-  onStepsChange: () => {},
-  onAmountChange: () => {},
+export const ExchangeRateContext = createContext<ExchangeRateContextValue | null>(null);
+
+export const useExchangeRateContext = () => {
+  const ctx = useContext(ExchangeRateContext);
+  if (!ctx) {
+    throw new Error('useExchangeRateContext must be used within ExchangeRateContext.Provider');
+  }
+
+  return ctx;
+};
+
+export const currencyRatesQueryOptions = queryOptions({
+  queryKey: ['currency-rates'],
+  queryFn: getCurrencyRates,
+  staleTime: 5 * 60_000, // На сервере TTL 1ч
+  enabled: CALCULATION_SOURCE === 'local',
 });
 
-export const useExchangeRateContext = () => useContext(ExchangeRateContext);
-
-export const useCurrencyRates = () =>
-  useQuery({
-    queryKey: ['currency-rates'],
-    queryFn: getCurrencyRates,
-    staleTime: 60 * 60_000,
-    enabled: CALCULATION_SOURCE === 'local',
-  });
+export const useCurrencyRates = () => useQuery(currencyRatesQueryOptions);
 
 export const useExchangeMutation = () =>
   useMutation({
