@@ -72,4 +72,3 @@ export const AddCurrency = ({ isAction }: Props) => {
     </Dialog.Root>
   );
 };
-
